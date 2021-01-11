@@ -1,37 +1,27 @@
-# Load Node Property Prediction datasets in OGB
 from ogb.nodeproppred import DglNodePropPredDataset
-from torch.utils.data import TensorDataset, DataLoader
 from dgl.dataloading import MultiLayerFullNeighborSampler, NodeDataLoader
+from dgl import add_self_loop
 
 from torch import nn
 from torch.optim import Adam
 
 from src.gnn import MultilayerGCN
-from nntoolbox.utils import get_device
-from nntoolbox.utils import save_model
+from nntoolbox.utils import save_model, load_model, get_device
 
-
-NUM_EPOCHS = 1
+NUM_EPOCHS = 20
+PRINT_LOSS_EVERY = 200
 WEIGHTS_PATH = "weights/model.pt"
 
 dataset = DglNodePropPredDataset(name='ogbn-arxiv')
 split_idx = dataset.get_idx_split()
 
 g, labels = dataset[0]
-# get split labels
-train_label = dataset.labels[split_idx['train']]
-valid_label = dataset.labels[split_idx['valid']]
-test_label = dataset.labels[split_idx['test']]
-
+g = add_self_loop(g)
+labels = labels.squeeze().to(get_device())
 
 train_idx = split_idx["train"]
 valid_idx = split_idx["valid"]
 test_idx = split_idx["test"]
-
-
-train_dataset = TensorDataset(g.ndata["feat"][train_idx], labels[train_idx])
-train_loader = DataLoader(train_dataset, shuffle=True, batch_size=128)
-
 
 train_dataloader = NodeDataLoader(
     g, train_idx, MultiLayerFullNeighborSampler(2),
@@ -57,8 +47,8 @@ test_dataloader = NodeDataLoader(
     num_workers=1
 )
 
-
-model = MultilayerGCN(128, [64], 40).to(get_device())
+model = MultilayerGCN(128, [256], 40).to(get_device())
+print(model)
 optimizer = Adam(model.parameters())
 
 criterion = nn.CrossEntropyLoss().to(get_device())
@@ -68,15 +58,18 @@ val_accs = []
 for e in range(NUM_EPOCHS):
     model.train()
 
-    for input_nodes, output_nodes, blocks in train_loader:
+    for i, (input_nodes, output_nodes, blocks) in enumerate(train_dataloader):
         optimizer.zero_grad()
 
         blocks = [b.to(get_device()) for b in blocks]
-        input_features = blocks[0].srcdata['features']
-        output_labels = blocks[-1].dstdata['label']
+        input_features = blocks[0].srcdata['feat']  # == g.ndata["feat"][input_nodes]
+        output_labels = labels[output_nodes]  # == labels[blocks[-1].dstdata["_ID"]]
 
         output_predictions = model(blocks, input_features)
-        loss = criterion(output_labels, output_predictions)
+        loss = criterion(output_predictions, output_labels)
+
+        if i % PRINT_LOSS_EVERY == 0:
+            print("Loss at iteration {}: {}".format(i, loss.item()))
 
         loss.backward()
         optimizer.step()
@@ -86,15 +79,14 @@ for e in range(NUM_EPOCHS):
     total_cnt = 0
     acc_preds = 0
 
-
     for input_nodes, output_nodes, blocks in valid_dataloader:
         blocks = [b.to(get_device()) for b in blocks]
-        input_features = blocks[0].srcdata['features']
-        output_labels = blocks[-1].dstdata['label']
+        input_features = blocks[0].srcdata['feat']
+        output_labels = labels[output_nodes]
 
         output_predictions = model(blocks, input_features).argmax(-1)
         acc_preds += (output_predictions == output_labels).sum().item()
-        total_cnt += input_features.shape[0]
+        total_cnt += output_nodes.shape[0]
 
     val_acc = acc_preds / total_cnt
     val_accs.append(val_acc)
@@ -105,17 +97,19 @@ for e in range(NUM_EPOCHS):
         save_model(model, WEIGHTS_PATH)
         print("Best validation accuracy so far. Saving model at {}".format(WEIGHTS_PATH))
 
-
 total_cnt = 0
 acc_preds = 0
 
+load_model(model, WEIGHTS_PATH)
+model.eval()
+
 for input_nodes, output_nodes, blocks in test_dataloader:
     blocks = [b.to(get_device()) for b in blocks]
-    input_features = blocks[0].srcdata['features']
-    output_labels = blocks[-1].dstdata['label']
+    input_features = blocks[0].srcdata['feat']
+    output_labels = labels[output_nodes]
 
     output_predictions = model(blocks, input_features).argmax(-1)
     acc_preds += (output_predictions == output_labels).sum().item()
-    total_cnt += input_features.shape[0]
+    total_cnt += output_nodes.shape[0]
 
 print("Test Accuracy: {}".format(acc_preds / total_cnt))
