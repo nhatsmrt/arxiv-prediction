@@ -1,4 +1,4 @@
-from torch import nn, relu
+from torch import nn
 from dgl.nn import GraphConv
 from typing import List, Callable
 
