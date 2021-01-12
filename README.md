@@ -14,4 +14,5 @@ Note that the script does not use any GPU (since my local setup does not have an
 
 Colab Notebooks:
   * [Simple Baseline (MLP)](https://colab.research.google.com/drive/15fPSGUzZI0BFIXgKdGNgyLDABd0je0JX?usp=sharing)
-  * [Two Layers Graph Convolutional Neural Network](https://colab.research.google.com/drive/12CQ4rsbW2vpyUn4Wu4lQ9trusidwnyuD?usp=sharing)
+  * [Two Layers Graph Convolutional Neural Network](https://colab.research.google.com/drive/1fV0s_HFplG9uw1qsTr_OL6xteEtkfE8K?usp=sharing)
+  * [Graph Attention Network](https://colab.research.google.com/drive/1fMvUnYQj1c42LLI7NfRWP3rU9U7XKAzV?usp=sharing)
