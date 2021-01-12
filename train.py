@@ -2,13 +2,13 @@ from ogb.nodeproppred import DglNodePropPredDataset
 from dgl.dataloading import MultiLayerFullNeighborSampler, NodeDataLoader
 from dgl import add_self_loop
 
-from torch import nn
+from torch import nn, no_grad
 from torch.optim import Adam
 
 from src.gnn import MultilayerGCN
 from nntoolbox.utils import save_model, load_model, get_device
 
-NUM_EPOCHS = 20
+NUM_EPOCHS = 1
 PRINT_LOSS_EVERY = 200
 WEIGHTS_PATH = "weights/model.pt"
 
@@ -74,42 +74,45 @@ for e in range(NUM_EPOCHS):
         loss.backward()
         optimizer.step()
 
-    model.eval()
 
-    total_cnt = 0
-    acc_preds = 0
+    with no_grad():
+      model.eval()
 
-    for input_nodes, output_nodes, blocks in valid_dataloader:
-        blocks = [b.to(get_device()) for b in blocks]
-        input_features = blocks[0].srcdata['feat']
-        output_labels = labels[output_nodes]
+      total_cnt = 0
+      acc_preds = 0
 
-        output_predictions = model(blocks, input_features).argmax(-1)
-        acc_preds += (output_predictions == output_labels).sum().item()
-        total_cnt += output_nodes.shape[0]
+      for input_nodes, output_nodes, blocks in valid_dataloader:
+          blocks = [b.to(get_device()) for b in blocks]
+          input_features = blocks[0].srcdata['feat']
+          output_labels = labels[output_nodes]
 
-    val_acc = acc_preds / total_cnt
-    val_accs.append(val_acc)
+          output_predictions = model(blocks, input_features).argmax(-1)
+          acc_preds += (output_predictions == output_labels).sum().item()
+          total_cnt += output_nodes.shape[0]
 
-    print("Validation Accuracy for Epoch {}: {}".format(e, val_acc))
+      val_acc = acc_preds / total_cnt
+      val_accs.append(val_acc)
 
-    if val_acc == max(val_accs):
-        save_model(model, WEIGHTS_PATH)
-        print("Best validation accuracy so far. Saving model at {}".format(WEIGHTS_PATH))
+      print("Validation Accuracy for Epoch {}: {}".format(e, val_acc))
 
-total_cnt = 0
-acc_preds = 0
+      if val_acc == max(val_accs):
+          save_model(model, WEIGHTS_PATH)
+          print("Best validation accuracy so far. Saving model at {}".format(WEIGHTS_PATH))
 
-load_model(model, WEIGHTS_PATH)
-model.eval()
+with no_grad():
+  total_cnt = 0
+  acc_preds = 0
 
-for input_nodes, output_nodes, blocks in test_dataloader:
-    blocks = [b.to(get_device()) for b in blocks]
-    input_features = blocks[0].srcdata['feat']
-    output_labels = labels[output_nodes]
+  load_model(model, WEIGHTS_PATH)
+  model.eval()
 
-    output_predictions = model(blocks, input_features).argmax(-1)
-    acc_preds += (output_predictions == output_labels).sum().item()
-    total_cnt += output_nodes.shape[0]
+  for input_nodes, output_nodes, blocks in test_dataloader:
+      blocks = [b.to(get_device()) for b in blocks]
+      input_features = blocks[0].srcdata['feat']
+      output_labels = labels[output_nodes]
 
-print("Test Accuracy: {}".format(acc_preds / total_cnt))
+      output_predictions = model(blocks, input_features).argmax(-1)
+      acc_preds += (output_predictions == output_labels).sum().item()
+      total_cnt += output_nodes.shape[0]
+
+  print("Test Accuracy: {}".format(acc_preds / total_cnt))
