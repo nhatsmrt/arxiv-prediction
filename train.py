@@ -5,7 +5,7 @@ from dgl import add_self_loop
 from torch import nn, no_grad
 from torch.optim import Adam
 
-from src.gnn import MultilayerGCN
+from src.models import *
 from nntoolbox.utils import save_model, load_model, get_device
 
 NUM_EPOCHS = 100
