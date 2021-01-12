@@ -20,3 +20,8 @@ if __name__ == '__main__':
     model = GraphLightningModule(MultilayerGCN(128, [256], 40), nn.CrossEntropyLoss())
 
     trainer.fit(model=model, datamodule=datamodule)
+    trainer.test(GraphLightningModule.load_from_checkpoint(
+        checkpoint_path="{}.ckpt".format(WEIGHTS_PATH),
+        model=MultilayerGCN(128, [256], 40),
+        criterion=nn.CrossEntropyLoss()
+    ), datamodule=datamodule)
