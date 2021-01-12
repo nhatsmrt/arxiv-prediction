@@ -8,7 +8,7 @@ from torch.optim import Adam
 from src.gnn import MultilayerGCN
 from nntoolbox.utils import save_model, load_model, get_device
 
-NUM_EPOCHS = 1
+NUM_EPOCHS = 100
 PRINT_LOSS_EVERY = 200
 WEIGHTS_PATH = "weights/model.pt"
 
