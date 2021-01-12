@@ -1,5 +1,5 @@
 from torch import nn, relu
-from dgl.nn import GraphConv
+from dgl.nn import GraphConv, GATConv
 from typing import List, Callable
 
 
@@ -16,7 +16,7 @@ class MultilayerGCN(nn.Module):
         activations = [activation() for _ in range(len(hidden_features))]
 
         for i in range(1, len(hidden_features)):
-            layers.append(GraphConv(hidden_features[i - 1], hidden_features[i], activation=activation()))
+            layers.append(GraphConv(hidden_features[i - 1], hidden_features[i]))
 
         layers.append(GraphConv(hidden_features[-1], out_features))
         self.layers = nn.ModuleList(layers)
