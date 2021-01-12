@@ -1,13 +1,17 @@
 from torch import nn
 from dgl.nn import GraphConv
 from typing import List, Callable
+from pytorch_lightning import LightningModule
 
 
 __all__ = ['MultilayerGCN']
 
 
-class MultilayerGCN(nn.Module):
-    def __init__(self, in_features: int, hidden_features: List[int], out_features: int, activation: Callable[[], nn.Module]=nn.ReLU):
+class MultilayerGCN(LightningModule):
+    def __init__(
+            self, in_features: int, hidden_features: List[int], out_features: int, activation: Callable[[], nn.Module]=nn.ReLU,
+
+    ):
         super().__init__()
 
         layers = [GraphConv(in_feats=in_features, out_feats=hidden_features[0])]
