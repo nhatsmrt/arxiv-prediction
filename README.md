@@ -6,3 +6,4 @@ Dataset is from the [Open Graph Benchmark](https://ogb.stanford.edu/docs/nodepro
 Colab Notebooks:
   * [Simple Baseline (MLP)](https://colab.research.google.com/drive/15fPSGUzZI0BFIXgKdGNgyLDABd0je0JX?usp=sharing)
   * [Two Layers Graph Convolutional Neural Network](https://colab.research.google.com/drive/12CQ4rsbW2vpyUn4Wu4lQ9trusidwnyuD?usp=sharing)
+  * [Graph Attention Network](https://colab.research.google.com/drive/1hq4yUWMa_G5liMVbDgJaVKmsgfXgma4j?usp=sharing)
