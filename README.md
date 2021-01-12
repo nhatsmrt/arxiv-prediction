@@ -1,5 +1,5 @@
 # Using Graph Neural Network to Predict CS Paper's Subject Area
-This repository contains my attempts at predicting the subject area (e.g) of computer science papers on Arxiv.
+This repository contains my attempts at predicting the subject area (e.g) of computer science papers on Arxiv, using [dgl](https://github.com/dmlc/dgl/)'s implementation of Graph Convolutional Neural Networks and Graph Attention Networks. Models are trained using the [pytorch-lightning](https://github.com/PyTorchLightning/pytorch-lightning) framework.
 
 Dataset is from the [Open Graph Benchmark](https://ogb.stanford.edu/docs/nodeprop/#ogbn-arxiv).
 
