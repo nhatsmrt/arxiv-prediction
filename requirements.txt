@@ -1,4 +1,4 @@
 torch
-dgl
 ogb
-nn-toolbox
+dgl
+pytorch_lightning
